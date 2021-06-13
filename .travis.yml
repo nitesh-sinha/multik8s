@@ -22,3 +22,16 @@ after_success:
   - docker push niteshks/multiservice-nginx
   - docker push niteshks/multiservice-server
   - docker push niteshks/multiservice-worker
+
+
+deploy:
+  provider: elasticbeanstalk
+  region: "us-east-2"
+  app: "multiservice-docker"
+  env: "Multiservicedocker-env"
+  bucket_name: "elasticbeanstalk-us-east-2-496837108164"
+  bucket_path: "multiservice-docker"
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY
