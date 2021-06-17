@@ -1,0 +1,30 @@
+apiVersion: v1
+# Note: PersistentVolumeClaim is not an instance of storage.
+# Kubernetes Volume: Lifecycle is associated to a pod. 
+# It can be used by any container(within that pod) to write 
+# data to it. If the app container dies, the volume still 
+# remains intact. However if the pod dies, the volume gets 
+# destroyed too. Not good for storing  persistent data.
+
+# Persistent Volume: Sits outside the pod and so its 
+# lifecycle is not associated to any pod.   Can be used 
+# by any container within any pod to store data. Good for 
+# storing persistent data.
+
+# Persistent Volume Claim: Billboard/Advertisement of 
+# sorts(for all pods within a K8S cluster) which advertises 
+# the available options of storage available to any 
+# container within a pod. It can advertise "statically 
+# provisioned persistent volumes" or "dynamically 
+# provisioned persistent volumes".
+kind: PersistentVolumeClaim
+metadata:
+  name: database-persistent-volume-claim
+spec:
+  # The following spec configs are meant for Kubernetes
+  # to find a volume object which meet these criteria.
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
