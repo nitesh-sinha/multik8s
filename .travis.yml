@@ -1,0 +1,42 @@
+sudo: required
+services:
+  - docker
+env:
+  global:
+    # GIT_SHA will ensure that any new changes made
+    # to image gets a new tag so that deploy.sh
+    # can pull that new image and deploy onto GKE
+    # Without this, it will always try to pull "latest"
+    # version of docker image which, according to
+    # "docker run", would seem like it hasn't been updated
+    # at all
+    - GIT_SHA=$(git rev-parse HEAD)
+    # To ensure gcloud cmds run in before_install step
+    # does not throw prompts and expect user input
+    # in Travis builds
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+before_install:
+  - openssl aes-256-cbc -K $encrypted_b01a662ce7e3_key -iv $encrypted_b01a662ce7e3_iv -in multik8s-317110-d95f80e2e744.json.enc -out service-account.json -d
+  - curl https://sdk.cloud.google.com | bash > /dev/null
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  - gcloud auth activate-service-account --key-file service-account.json
+  # Next 3 gcloud cmds to be run on google cloud console shell
+  # for every new cluster and project
+  - gcloud config set project multik8s-317110
+  - gcloud config set compute/zone us-central1-c
+  - gcloud container clusters get-credentials multi-cluster
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t niteshks/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true niteshks/react-test npm run test -- --coverage
+
+deploy:
+  # Since Travis does not have a built-in script
+  # to deploy to GKE, we need to provide a custom
+  # script
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
